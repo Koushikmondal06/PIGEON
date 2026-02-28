@@ -32,7 +32,7 @@ const cards = [
     {
         icon: Brain,
         title: 'AI-Powered',
-        description: 'Natural language intent parsing via Gemini AI. Just text "send 30 ETH to 9912345678" and it works.',
+        description: 'Natural language intent parsing via Gemini AI. Just text "send 30 ALGO to 9912345678" and it works.',
         color: '#10B981',
         yInput: [0, 1],
         yOutput: [150, 20],
@@ -86,7 +86,7 @@ export function About() {
                         ref={containerRef}
                         className="cards-grid sticky top-1/2 -translate-y-1/2 flex justify-center items-center h-[500px] w-full max-w-5xl mx-auto"
                     >
-                        {cards.map((card, i) => {
+                        {cards.map((card, _i) => {
                             // eslint-disable-next-line react-hooks/rules-of-hooks
                             const y = useTransform(scrollYProgress, [0.1, 0.4], [card.yOutput[0], card.yOutput[1]])
                             // eslint-disable-next-line react-hooks/rules-of-hooks

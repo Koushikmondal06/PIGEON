@@ -83,7 +83,7 @@ export function Hero() {
                         ref={subtitleRef}
                         className="font-sans text-[var(--muted-foreground)] text-center text-base md:text-xl lg:text-2xl max-w-3xl mx-auto leading-relaxed mb-6"
                     >
-                        PIGEON lets anyone send and receive cryptocurrency using simple text messages.
+                        PIGEON lets anyone send and receive crypto on Algorand using simple text messages.
                         Powered by AI intent parsing and threshold cryptography.
                     </p>
 
@@ -93,7 +93,7 @@ export function Hero() {
                             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[var(--primary)] opacity-75"></span>
                             <span className="relative inline-flex h-2 w-2 rounded-full bg-[var(--primary)]"></span>
                         </span>
-                        <p className="text-xs text-[var(--primary-light)] font-mono">Active on Arbitrum Sepolia</p>
+                        <p className="text-xs text-[var(--primary-light)] font-mono">Built on Algorand</p>
                     </div>
 
                     {/* CTA Buttons */}

@@ -7,11 +7,11 @@ gsap.registerPlugin(ScrollTrigger)
 const techStack = [
     { name: 'Node.js', color: '#339933' },
     { name: 'TypeScript', color: '#3178C6' },
-    { name: 'React Native', color: '#61DAFB' },
-    { name: 'Ethers.js', color: '#2535A0' },
+    { name: 'Algorand', color: '#000000' },
+    { name: 'AlgoKit', color: '#6E40C9' },
     { name: 'Gemini AI', color: '#8B5CF6' },
-    { name: 'Three.js', color: '#000000' },
-    { name: 'Arbitrum', color: '#28A0F0' },
+    { name: 'algosdk', color: '#28A0F0' },
+    { name: 'Puya TS', color: '#10B981' },
     { name: 'Express', color: '#FF6600' },
 ]
 

@@ -10,14 +10,14 @@ const steps = [
         icon: MessageSquare,
         number: '01',
         title: 'User Sends SMS',
-        description: '"Send 30 ETH to 9912345678"',
+        description: '"Send 30 ALGO to 9912345678"',
         color: '#06B6D4',
     },
     {
         icon: Brain,
         number: '02',
         title: 'AI Parses Intent',
-        description: 'Gemini AI extracts: intent=send, amount=30, asset=ETH, to=9912345678',
+        description: 'Gemini AI extracts: intent=send, amount=30, asset=ALGO, to=9912345678',
         color: '#8B5CF6',
     },
     {
@@ -31,7 +31,7 @@ const steps = [
         icon: Radio,
         number: '04',
         title: 'Broadcast to Chain',
-        description: 'Signed transaction is broadcast to Arbitrum Sepolia for execution.',
+        description: 'Signed transaction is broadcast to Algorand for execution.',
         color: '#EF4444',
     },
     {
