@@ -181,6 +181,17 @@ void parseAndProcessSMS(const String& rawData) {
   String messageBody = rawData.substring(bodyStart + 1);
   messageBody.trim();
 
+  // Strip non-printable / non-ASCII bytes (SIM800L buffer garbage)
+  String cleanBody = "";
+  for (unsigned int i = 0; i < messageBody.length(); i++) {
+    char c = messageBody[i];
+    if (c >= 0x20 && c <= 0x7E) {   // printable ASCII only
+      cleanBody += c;
+    }
+  }
+  cleanBody.trim();
+  messageBody = cleanBody;
+
   if (senderPhone.length() == 0 || messageBody.length() == 0) return;
 
   SerialMon.println("─────────────────────────────────────");

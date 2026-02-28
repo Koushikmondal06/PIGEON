@@ -135,7 +135,10 @@ interface SmsProcessResult {
  *   Step 1 — user sends command (no password) → system asks for password
  *   Step 2 — user replies with just the password → system executes + warns to delete
  */
-async function processIncomingSms(from: string, message: string): Promise<SmsProcessResult> {
+async function processIncomingSms(from: string, rawMessage: string): Promise<SmsProcessResult> {
+  // Strip non-printable / non-ASCII garbage bytes (SIM800L buffer padding, etc.)
+  const message = rawMessage.replace(/[^\x20-\x7E]/g, '').trim();
+
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
     return { reply: '!!! Server error: AI classifier not configured', containedPassword: false };
