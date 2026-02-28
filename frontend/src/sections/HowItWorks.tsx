@@ -23,8 +23,8 @@ const steps = [
     {
         icon: Shield,
         number: '03',
-        title: 'Threshold Signing',
-        description: 'Multiple nodes collaborate via TSS to sign the transaction securely.',
+        title: 'Decrypt & Sign',
+        description: 'Your wallet mnemonic is decrypted with your password and the transaction is signed locally.',
         color: '#F59E0B',
     },
     {

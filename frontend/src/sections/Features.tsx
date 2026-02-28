@@ -35,14 +35,14 @@ const features = [
         description: 'Gemini AI parses natural language messages to understand user intent.',
     },
     {
-        title: 'DKG Key Generation',
+        title: 'Encrypted Key Storage',
         icon: KeyRound,
-        description: 'Distributed Key Generation creates wallet keys without any single party having full access.',
+        description: 'Wallet mnemonics are AES-encrypted with your password and stored securely on-chain.',
     },
     {
-        title: 'Threshold ECDSA',
+        title: 'Password-Signed Txns',
         icon: PenTool,
-        description: 'Multi-party signing ensures transactions require consensus from multiple nodes.',
+        description: 'Transactions are signed by decrypting your key with your password. No raw keys ever exposed.',
     },
     {
         title: 'Phone-Number Wallets',

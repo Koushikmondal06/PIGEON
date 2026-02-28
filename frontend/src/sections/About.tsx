@@ -20,8 +20,8 @@ const cards = [
     },
     {
         icon: Shield,
-        title: 'Threshold Crypto',
-        description: 'Private keys are split across multiple nodes using DKG. No single point of failure. Your funds stay safe.',
+        title: 'Encrypted Wallets',
+        description: 'Your wallet mnemonic is encrypted with your password and stored on-chain. No one else can access your funds.',
         color: '#8B5CF6',
         yInput: [0, 1],
         yOutput: [150, -20],
