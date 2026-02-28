@@ -1,7 +1,8 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
-import { getIntent, type IntentResult } from "./intent";
+import { getIntent, type IntentResult, type ChainType } from "./intent";
+// ── Algorand modules ──
 import { onboardUser } from "./onboard";
 import { sendAlgo } from "./send";
 import { getBalance } from "./balance";
@@ -9,6 +10,15 @@ import { getAddress } from "./address";
 import { fundUser } from "./fund";
 import { getTransactions } from "./transactions";
 import { findOnboardedUser } from "./onchain";
+// ── Solana modules ──
+import { onboardUserSolana } from "./onboard-solana";
+import { sendSol } from "./send-solana";
+import { getBalanceSolana } from "./balance-solana";
+import { getAddressSolana } from "./address-solana";
+import { fundUserSolana } from "./fund-solana";
+import { getTransactionsSolana } from "./transactions-solana";
+import { findOnboardedUserSolana } from "./onchain-solana";
+// ── Shared ──
 import { decryptMnemonic } from "./crypto/mnemonic";
 import { setupWebhookRoutes } from "./webhook";
 
@@ -26,6 +36,8 @@ interface SmsRequestBody {
   messege?: string;
   /** Required for onboard and send: user password (encrypts wallet on onboard, decrypts to sign on send) */
   password?: string;
+  /** Blockchain to use: "algorand" (default) or "solana" */
+  chain?: ChainType;
 }
 
 app.post("/api/sms", async (req, res) => {
@@ -53,12 +65,18 @@ app.post("/api/sms", async (req, res) => {
 
     const intentResult: IntentResult = await getIntent(message, apiKey);
 
+    // Resolve chain: explicit body.chain > intent-detected chain > default "algorand"
+    const chain: ChainType =
+      body.chain ?? intentResult.params.chain ?? "algorand";
+    const isSolana = chain === "solana";
+
     const payload: Record<string, unknown> = {
       ok: true,
       from: from ?? null,
       message,
       intent: intentResult.intent,
       params: intentResult.params,
+      chain,
     };
 
     if (intentResult.intent === "onboard") {
@@ -77,7 +95,9 @@ app.post("/api/sms", async (req, res) => {
         });
         return;
       }
-      const onboarding = await onboardUser(from, password);
+      const onboarding = isSolana
+        ? await onboardUserSolana(from, password)
+        : await onboardUser(from, password);
       payload.onboarding = onboarding;
       if (onboarding.error && !onboarding.alreadyOnboarded) {
         res.status(500).json({ ...payload, ok: false, error: onboarding.error });
@@ -101,11 +121,17 @@ app.post("/api/sms", async (req, res) => {
         });
         return;
       }
-      const sendResult = await sendAlgo(from, password, {
-        amount: intentResult.params.amount ?? "0",
-        asset: intentResult.params.asset,
-        to: intentResult.params.to ?? "",
-      });
+      const sendResult = isSolana
+        ? await sendSol(from, password, {
+            amount: intentResult.params.amount ?? "0",
+            asset: intentResult.params.asset,
+            to: intentResult.params.to ?? "",
+          })
+        : await sendAlgo(from, password, {
+            amount: intentResult.params.amount ?? "0",
+            asset: intentResult.params.asset,
+            to: intentResult.params.to ?? "",
+          });
       payload.send = sendResult;
       if (!sendResult.success) {
         res.status(400).json({ ...payload, ok: false, error: sendResult.error });
@@ -121,9 +147,9 @@ app.post("/api/sms", async (req, res) => {
         });
         return;
       }
-      const balanceResult = await getBalance(from, {
-        asset: intentResult.params.asset,
-      });
+      const balanceResult = isSolana
+        ? await getBalanceSolana(from, { asset: intentResult.params.asset })
+        : await getBalance(from, { asset: intentResult.params.asset });
       payload.balance = balanceResult;
       if (!balanceResult.success) {
         res.status(400).json({ ...payload, ok: false, error: balanceResult.error });
@@ -139,7 +165,9 @@ app.post("/api/sms", async (req, res) => {
         });
         return;
       }
-      const txnResult = await getTransactions(from, 5);
+      const txnResult = isSolana
+        ? await getTransactionsSolana(from, 5)
+        : await getTransactions(from, 5);
       payload.transactions = txnResult;
       if (!txnResult.success) {
         res.status(400).json({ ...payload, ok: false, error: txnResult.error });
@@ -155,7 +183,9 @@ app.post("/api/sms", async (req, res) => {
         });
         return;
       }
-      const addressResult = await getAddress(from);
+      const addressResult = isSolana
+        ? await getAddressSolana(from)
+        : await getAddress(from);
       payload.address = addressResult;
       if (!addressResult.success) {
         res.status(400).json({ ...payload, ok: false, error: addressResult.error });
@@ -171,7 +201,9 @@ app.post("/api/sms", async (req, res) => {
         });
         return;
       }
-      const fundResult = await fundUser(from);
+      const fundResult = isSolana
+        ? await fundUserSolana(from)
+        : await fundUser(from);
       payload.fund = fundResult;
       if (!fundResult.success) {
         res.status(400).json({ ...payload, ok: false, error: fundResult.error });
@@ -195,7 +227,9 @@ app.post("/api/sms", async (req, res) => {
         });
         return;
       }
-      const user = await findOnboardedUser(from);
+      const user = isSolana
+        ? await findOnboardedUserSolana(from)
+        : await findOnboardedUser(from);
       if (!user?.encrypted_mnemonic || !user?.address) {
         res.status(400).json({ ...payload, ok: false, error: "Account not found or not onboarded" });
         return;
