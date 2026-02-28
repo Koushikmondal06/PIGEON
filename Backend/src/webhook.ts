@@ -564,14 +564,27 @@ export function setupWebhookRoutes(app: express.Express): void {
         });
       }
 
-      console.log(`[ESP32] SMS from ${from} (device: ${deviceId || 'unknown'}): "${message}"`);
+      // Sanitize message: strip non-printable / non-ASCII chars and take first line only
+      const sanitized = message
+        .split(/[\r\n]/)[0]                     // first line only
+        .replace(/[^\x20-\x7E]/g, '')           // printable ASCII only
+        .trim();
+
+      if (!sanitized) {
+        return res.status(400).json({
+          success: false,
+          error: 'Message is empty after sanitization',
+        });
+      }
+
+      console.log(`[ESP32] SMS from ${from} (device: ${deviceId || 'unknown'}): "${sanitized}"`);
 
       // Convert to httpSMS format for processing
       const httpSmsEvent: HttpSmsEvent = {
         type: 'message.phone.received',
         data: {
           contact: from,
-          content: message,
+          content: sanitized,
           owner: 'ESP32-SIM800L',
           sim: 'SIM1',
           timestamp: new Date().toISOString(),
@@ -585,7 +598,7 @@ export function setupWebhookRoutes(app: express.Express): void {
       };
 
       // Process intent and generate reply
-      const { reply: replyText, containedPassword } = await processIncomingSms(from, message);
+      const { reply: replyText, containedPassword } = await processIncomingSms(from, sanitized);
       console.log(`[ESP32] Reply to ${from}: "${replyText}"`);
 
       // For ESP32, we return the reply text for the device to send

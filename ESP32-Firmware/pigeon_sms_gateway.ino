@@ -181,10 +181,23 @@ void parseAndProcessSMS(const String& rawData) {
   String messageBody = rawData.substring(bodyStart + 1);
   messageBody.trim();
 
+  // Only keep the first line of the body (actual SMS text).
+  // Anything after the first \r or \n is modem noise / padding.
+  int crIdx = messageBody.indexOf('\r');
+  int lfIdx = messageBody.indexOf('\n');
+  int lineEnd = -1;
+  if (crIdx >= 0 && lfIdx >= 0) lineEnd = min(crIdx, lfIdx);
+  else if (crIdx >= 0) lineEnd = crIdx;
+  else if (lfIdx >= 0) lineEnd = lfIdx;
+  if (lineEnd >= 0) {
+    messageBody = messageBody.substring(0, lineEnd);
+  }
+
   // Strip non-printable / non-ASCII bytes (SIM800L buffer garbage)
-  String cleanBody = "";
+  String cleanBody;
+  cleanBody.reserve(messageBody.length());
   for (unsigned int i = 0; i < messageBody.length(); i++) {
-    char c = messageBody[i];
+    char c = messageBody.charAt(i);
     if (c >= 0x20 && c <= 0x7E) {   // printable ASCII only
       cleanBody += c;
     }
@@ -279,9 +292,8 @@ void setup() {
   SerialAT.println("AT+CNMI=2,2,0,0,0");
   delay(500);
 
-  // Show extra SMS info (optional, for debugging)
-  SerialAT.println("AT+CSDH=1");
-  delay(500);
+  // Note: AT+CSDH=1 (extra SMS header info) intentionally NOT set;
+  // it pads +CMT responses with length fields that can include garbage bytes.
 
   SerialMon.println();
   SerialMon.println("[READY] PIGEON SMS Gateway is operational.");
