@@ -4,31 +4,54 @@
 
 An SMS-driven backend system that processes financial transactions, manages user accounts, and executes blockchain-based payments through intent detection and natural language processing.
 
-```
-User Phone
-   ↓ (SMS)
-SMS Gateway
-   ↓
-SMS Handler (Receive)
-   ↓
-Intent Parser / NLP
-   ↓
-Command Router (Algo Layer)
-   ↓
-Business Services
-   ├── Account Service
-   ├── Payment Service
-   └── Wallet/Chain Service
-   ↓
-Blockchain / Payment Network
-   ↓
-Result Processor
-   ↓
-SMS Handler (Send)
-   ↓
-SMS Gateway
-   ↓
-User Phone (Confirmation SMS)
+```text
+┌────────────────────────────────────────────────────────┐
+│                      User Phone                        │
+└──────────────────────────┬─────────────────────────────┘
+                           │ (SMS)
+┌──────────────────────────▼─────────────────────────────┐
+│                      SMS Gateway                       │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+┌──────────────────────────▼─────────────────────────────┐
+│                 SMS Handler (Receive)                  │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+┌──────────────────────────▼─────────────────────────────┐
+│                  Intent Parser / NLP                   │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+┌──────────────────────────▼─────────────────────────────┐
+│              Command Router (Algo Layer)               │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+┌──────────────────────────▼─────────────────────────────┐
+│                   Business Services                    │
+│                                                        │
+│ ┌───────────────┐ ┌───────────────┐ ┌────────────────┐ │
+│ │Account Service│ │Payment Service│ │ Wallet/Chain   │ │
+│ └───────────────┘ └───────────────┘ └────────────────┘ │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+┌──────────────────────────▼─────────────────────────────┐
+│              Blockchain / Payment Network              │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+┌──────────────────────────▼─────────────────────────────┐
+│                    Result Processor                    │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+┌──────────────────────────▼─────────────────────────────┐
+│                  SMS Handler (Send)                    │
+└──────────────────────────┬─────────────────────────────┘
+                           │
+┌──────────────────────────▼─────────────────────────────┐
+│                      SMS Gateway                       │
+└──────────────────────────┬─────────────────────────────┘
+                           │ (Confirmation SMS)
+┌──────────────────────────▼─────────────────────────────┐
+│                      User Phone                        │
+└────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -139,111 +162,6 @@ User Phone (Confirmation SMS)
   - Maintain transaction immutability
   - Enable transparent audit trail
 
----
-
-## Data Flow Sequence
-
-### **Scenario 1: User Sends Funds**
-
-```
-Step 1: SMS Receive
-├─ User sends: "SEND 5000 to 1234567890"
-├─ SMS Gateway receives message
-└─ SMS Handler parses and authenticates user
-
-Step 2: Intent Detection
-├─ Intent Parser analyzes message
-├─ Extracts: operation=SEND, amount=5000, recipient=1234567890
-└─ Returns Intent Object
-
-Step 3: Command Routing
-├─ Router receives intent
-├─ Validates sender account exists
-├─ Routes to Payment Service
-└─ Routes to Wallet/Chain Service
-
-Step 4: Business Logic
-├─ Payment Service checks:
-│  ├─ Sender balance ≥ 5000
-│  ├─ Recipient account exists
-│  └─ Transaction limits not exceeded
-├─ Wallet Service:
-│  ├─ Retrieves current balance from blockchain
-│  ├─ Executes transfer transaction
-│  ├─ Updates blockchain ledger
-│  └─ Returns transaction hash
-
-Step 5: Result Processing
-├─ Aggregates transaction result
-├─ Generates confirmation message
-├─ Stores transaction in database
-└─ Prepares SMS response
-
-Step 6: SMS Response
-├─ SMS Handler composes: "✓ Sent 5000 to 1234567890. Ref: [TXNID]"
-├─ Sends via SMS Gateway
-└─ Confirmation delivered to user
-```
-
-### **Scenario 2: New Account Creation**
-
-```
-Step 1: SMS Receive
-├─ User sends: "CREATE ACCOUNT"
-├─ SMS Gateway receives
-└─ SMS Handler processes
-
-Step 2: Intent Detection
-├─ Intent Parser recognizes CREATE_ACCOUNT intent
-└─ Extracts user phone number
-
-Step 3: Command Routing
-├─ Routes to Account Service
-└─ Validation check (phone not already registered)
-
-Step 4: Account Creation
-├─ Account Service creates user profile
-├─ Generates wallet address
-├─ Initializes zero balance wallet
-├─ Stores in database
-└─ Wallet/Chain Service creates on-chain wallet record
-
-Step 5: Result Processing
-├─ Success confirmation prepared
-└─ User details compiled for SMS
-
-Step 6: SMS Response
-├─ Sends: "✓ Account created! Your ID: [USER_ID]. Balance: 0"
-└─ SMS delivered to user
-```
-
-### **Scenario 3: Payment Execution**
-
-```
-Step 1: SMS Receive
-├─ User sends: "PAY 2500 for Bill"
-└─ SMS Handler validates
-
-Step 2: Intent Parsing
-├─ Recognizes PAY intent
-├─ Amount: 2500
-└─ Purpose: Bill
-
-Step 3: Route to Payment Service
-├─ Validate bill ID exists
-├─ Check sender can pay
-└─ Lock funds temporarily
-
-Step 4: Chain Execution
-├─ Wallet Service executes transaction
-├─ Blockchain records payment
-├─ Updates bill status to PAID
-└─ Returns transaction confirmation
-
-Step 5: Confirmation SMS
-├─ Compose: "✓ Payment of 2500 processed. Bill Ref: [ID]"
-└─ Send to user
-```
 
 ---
 
