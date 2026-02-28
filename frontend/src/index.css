@@ -336,3 +336,85 @@ body {
 .card-glow-border:hover::after {
   opacity: 1;
 }
+
+/* ── Circular Testimonials ── */
+.ct-container {
+  width: 100%;
+  max-width: 56rem;
+  padding: 2rem;
+  margin: 0 auto;
+}
+
+.ct-grid {
+  display: grid;
+  gap: 5rem;
+}
+
+@media (min-width: 768px) {
+  .ct-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ct-arrows {
+    padding-top: 0 !important;
+  }
+}
+
+.ct-image-container {
+  position: relative;
+  width: 100%;
+  height: 24rem;
+  perspective: 1000px;
+}
+
+.ct-image {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 1.5rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.ct-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.ct-name {
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+  font-family: var(--font-display);
+}
+
+.ct-designation {
+  margin-bottom: 2rem;
+  font-family: var(--font-mono);
+}
+
+.ct-quote {
+  line-height: 1.75;
+}
+
+.ct-arrows {
+  display: flex;
+  gap: 1.5rem;
+  padding-top: 3rem;
+}
+
+.ct-arrow-btn {
+  width: 2.7rem;
+  height: 2.7rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s, transform 0.2s;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ct-arrow-btn:hover {
+  transform: scale(1.1);
+}
