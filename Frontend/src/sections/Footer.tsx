@@ -82,12 +82,12 @@ export function Footer() {
                             </li>
                             <li>
                                 <a
-                                    href="https://testnet.explorer.perawallet.app/"
+                                    href="https://sepolia.arbiscan.io/"
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="text-[13px] text-gray-400/80 hover:text-white transition-colors inline-flex items-center gap-1.5"
                                 >
-                                    <ExternalLink size={13} className="text-gray-500" /> Algo Explorer
+                                    <ExternalLink size={13} className="text-gray-500" /> Arbiscan
                                 </a>
                             </li>
                         </ul>
