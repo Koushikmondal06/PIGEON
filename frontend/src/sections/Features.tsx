@@ -17,7 +17,7 @@ const features = [
     {
         title: 'Send Crypto via SMS',
         icon: Send,
-        description: 'Transfer ETH and tokens with a simple text message. No internet required.',
+        description: 'Transfer ALGO and ASAs with a simple text message. No internet required.',
     },
     {
         title: 'Check Balance',
@@ -35,14 +35,14 @@ const features = [
         description: 'Gemini AI parses natural language messages to understand user intent.',
     },
     {
-        title: 'DKG Key Generation',
+        title: 'Encrypted Key Storage',
         icon: KeyRound,
-        description: 'Distributed Key Generation creates wallet keys without any single party having full access.',
+        description: 'Wallet mnemonics are AES-encrypted with your password and stored securely on-chain.',
     },
     {
-        title: 'Threshold ECDSA',
+        title: 'Password-Signed Txns',
         icon: PenTool,
-        description: 'Multi-party signing ensures transactions require consensus from multiple nodes.',
+        description: 'Transactions are signed by decrypting your key with your password. No raw keys ever exposed.',
     },
     {
         title: 'Phone-Number Wallets',
@@ -50,9 +50,9 @@ const features = [
         description: 'Your phone number IS your wallet. No seed phrases to remember.',
     },
     {
-        title: 'Arbitrum Sepolia',
+        title: 'Algorand Network',
         icon: Blocks,
-        description: 'Built on Ethereum L2 for fast, low-cost transactions on the testnet.',
+        description: 'Built on Algorand for instant finality, low-cost transactions, and carbon-negative consensus.',
     },
 ]
 

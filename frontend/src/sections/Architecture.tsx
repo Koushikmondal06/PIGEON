@@ -7,11 +7,11 @@ gsap.registerPlugin(ScrollTrigger)
 const techStack = [
     { name: 'Node.js', color: '#339933' },
     { name: 'TypeScript', color: '#3178C6' },
-    { name: 'React Native', color: '#61DAFB' },
-    { name: 'Ethers.js', color: '#2535A0' },
+    { name: 'Algorand', color: '#000000' },
+    { name: 'AlgoKit', color: '#6E40C9' },
     { name: 'Gemini AI', color: '#8B5CF6' },
-    { name: 'Three.js', color: '#000000' },
-    { name: 'Arbitrum', color: '#28A0F0' },
+    { name: 'algosdk', color: '#28A0F0' },
+    { name: 'Puya TS', color: '#10B981' },
     { name: 'Express', color: '#FF6600' },
 ]
 
@@ -99,40 +99,33 @@ export function Architecture() {
                         <span className="text-[var(--primary)]">Design</span>
                     </h2>
                     <p className="text-[var(--muted-foreground)] max-w-3xl text-base md:text-lg lg:text-xl leading-relaxed">
-                        A robust pipeline from SMS to blockchain, powered by AI and threshold cryptography.
+                        A robust pipeline from SMS to blockchain, powered by Gemini AI and encrypted wallet management.
                     </p>
                 </div>
 
                 {/* Architecture Diagram */}
                 <div className="arch-diagram perspective-container spotlight-card p-8 md:p-12 mb-14">
                     <pre className="text-[10px] sm:text-xs md:text-sm font-mono text-[var(--muted-foreground)] overflow-x-auto leading-relaxed">
-                        {`User SMS ──▶ Android App (SMSReceiver) 
-                  │
-                  ▼
-            POST /api/sms  ──▶  Regex Parser (fast)
-                                    │
-                              ┌─────┴─────┐
-                              │ success?   │
-                              ▼            ▼
-                           Use it     Gemini AI (fallback)
-                              │            │
-                              └─────┬──────┘
-                                    ▼
-                            Intent Routing
-                        ┌───────┼────────┐
-                        ▼       ▼        ▼
-                   get-addr  balance  transaction
-                      │        │         │
-                      ▼        ▼         ▼
-                    DKG    chain-RPC   TSS Sign → Broadcast
-                      │        │         │
-                      └────────┴─────────┘
+                        {`User SMS ──▶ httpSMS / ESP32+SIM800L
+                   │
+                   ▼
+        POST /api/sms-webhook ──▶ Gemini 2.5 Flash
+                                     │
+                               Intent Routing
+                      ┌──────┬───────┼────────┬──────┐
+                      ▼      ▼       ▼        ▼      ▼
+                  onboard  balance  send    address  fund
+                    │        │       │        │       │
+                    ▼        ▼       ▼        ▼       ▼
+                 algosdk ── Algorand Blockchain ── algosdk
+                    │        │       │        │       │
+                    └────────┴───────┴────────┴───────┘
                                 │
                                 ▼
                          JSON Response
                                 │
                                 ▼
-                    Android App (SMSSender) ──▶ SMS to User`}
+                     httpSMS API ──▶ SMS to User`}
                     </pre>
                 </div>
 

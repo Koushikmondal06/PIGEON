@@ -25,6 +25,15 @@ const team = [
         avatar: 'HM',
         gradient: 'from-[var(--accent)] to-[#10B981]',
     },
+    {
+        name: 'Anushna Chakraborty',
+        role: 'Full Stack Developer',
+        bio: 'Crafting seamless user experiences and robust backend systems. Passionate about building decentralized solutions that empower everyday users.',
+        github: 'https://github.com/kookies-in-the-jar',
+        linkedin: '#',
+        avatar: 'AC',
+        gradient: 'from-[#10B981] to-[var(--primary)]',
+    },
 ]
 
 export function Team() {
