@@ -11,19 +11,19 @@ const team = [
         quote: 'Building the bridge between SMS and blockchain. Passionate about decentralized systems and making crypto accessible to everyone.',
         name: 'Koushik Mondal',
         designation: 'Full Stack Developer',
-        src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=600&auto=format&fit=crop',
+        src: '/team/koushik.jpg',
     },
     {
         quote: 'Designing secure cryptographic protocols and scalable backend systems. Driven by the vision of financial inclusion through technology.',
         name: 'Himanshu Malik',
         designation: 'Full Stack Developer',
-        src: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=600&auto=format&fit=crop',
+        src: '/team/himanshu.jpg',
     },
     {
         quote: 'Crafting seamless user experiences and robust backend systems. Passionate about building decentralized solutions that empower everyday users.',
         name: 'Anushna Chakraborty',
         designation: 'Full Stack Developer',
-        src: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=600&auto=format&fit=crop',
+        src: '/team/anushna.jpg',
     },
 ]
 
