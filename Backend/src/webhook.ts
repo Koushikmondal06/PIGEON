@@ -1,11 +1,19 @@
 import express from 'express';
-import { getIntent, type IntentResult } from './intent';
+import { getIntent, type IntentResult, type ChainType } from './intent';
+// ── Algorand modules ──
 import { sendAlgo } from './send';
 import { getBalance } from './balance';
 import { getAddress } from './address';
 import { onboardUser } from './onboard';
 import { fundUser } from './fund';
 import { getTransactions } from './transactions';
+// ── Solana modules ──
+import { sendSol } from './send-solana';
+import { getBalanceSolana } from './balance-solana';
+import { getAddressSolana } from './address-solana';
+import { onboardUserSolana } from './onboard-solana';
+import { fundUserSolana } from './fund-solana';
+import { getTransactionsSolana } from './transactions-solana';
 
 // ─── httpSMS CloudEvents Payload Types ───────────────────────────────────────
 
@@ -97,6 +105,8 @@ interface PendingSession {
   action: 'send' | 'onboard' | 'get_pvt_key';
   /** Send params (only for 'send') */
   sendParams?: { amount: string; asset?: string; to: string };
+  /** Which blockchain this session targets */
+  chain: ChainType;
   createdAt: number;
 }
 
@@ -150,13 +160,13 @@ async function processIncomingSms(from: string, message: string): Promise<SmsPro
 
     // Execute the pending action with the password
     if (pending.action === 'onboard') {
-      return await executeOnboard(from, password);
+      return await executeOnboard(from, password, pending.chain);
     }
     if (pending.action === 'send' && pending.sendParams) {
-      return await executeSend(from, password, pending.sendParams);
+      return await executeSend(from, password, pending.sendParams, pending.chain);
     }
     if (pending.action === 'get_pvt_key') {
-      return await executeGetPvtKey(from, password);
+      return await executeGetPvtKey(from, password, pending.chain);
     }
 
     return { reply: '!!! Something went wrong with the pending session. Please try again.', containedPassword: false };
@@ -165,31 +175,40 @@ async function processIncomingSms(from: string, message: string): Promise<SmsPro
   // ── Normal intent classification ───────────────────────────────────────
   try {
     const intentResult: IntentResult = await getIntent(message, apiKey);
-    console.log('Intent classified:', intentResult.intent, intentResult.params);
+    const chain: ChainType = intentResult.params.chain ?? 'algorand';
+    const isSolana = chain === 'solana';
+    const assetLabel = isSolana ? 'SOL' : 'ALGO';
+    console.log('Intent classified:', intentResult.intent, intentResult.params, '| chain:', chain);
 
     switch (intentResult.intent) {
       case 'get_balance': {
-        const result = await getBalance(from, { asset: intentResult.params.asset });
+        const result = isSolana
+          ? await getBalanceSolana(from, { asset: intentResult.params.asset })
+          : await getBalance(from, { asset: intentResult.params.asset });
         if (result.success) {
-          return { reply: `$$ Balance: ${result.balance} ${result.asset ?? 'ALGO'}`, containedPassword: false };
+          return { reply: `$$ Balance: ${result.balance} ${result.asset ?? assetLabel}`, containedPassword: false };
         }
         return { reply: `!!! Balance check failed: ${result.error ?? 'Unknown error'}`, containedPassword: false };
       }
 
       case 'get_address': {
-        const result = await getAddress(from);
+        const result = isSolana
+          ? await getAddressSolana(from)
+          : await getAddress(from);
         if (result.success) {
-          return { reply: `>> Your address:\n${result.address}`, containedPassword: false };
+          return { reply: `>> Your ${assetLabel} address:\n${result.address}`, containedPassword: false };
         }
         return { reply: `!!! Address lookup failed: ${result.error ?? 'Unknown error'}`, containedPassword: false };
       }
 
       case 'get_txn': {
-        const txnResult = await getTransactions(from, 5);
+        const txnResult = isSolana
+          ? await getTransactionsSolana(from, 5)
+          : await getTransactions(from, 5);
         if (txnResult.success && txnResult.transactions?.length) {
           const lines = txnResult.transactions.map((tx, i) => {
             const dir = tx.sender === txnResult.address ? '<Sent' : '>Received';
-            const amt = tx.amount ? `${tx.amount} ALGO` : tx.type;
+            const amt = tx.amount ? `${tx.amount} ${assetLabel}` : tx.type;
             const date = tx.roundTime.slice(0, 10);
             return `${i + 1}. ${dir} ${amt} (${date})\n   ${tx.explorerUrl}`;
           });
@@ -205,22 +224,23 @@ async function processIncomingSms(from: string, message: string): Promise<SmsPro
         const to = intentResult.params.to ?? '';
         const amount = intentResult.params.amount ?? '0';
         if (!to) {
-          return { reply: '!!! Recipient is required.\nFormat: send [amount] ALGO to [address/phone]', containedPassword: false };
+          return { reply: `!!! Recipient is required.\nFormat: send [amount] ${assetLabel} to [address/phone]`, containedPassword: false };
         }
 
         // If user included password in the message, execute immediately
         if (intentResult.params.password) {
-          return await executeSend(from, intentResult.params.password, { amount, asset: intentResult.params.asset, to });
+          return await executeSend(from, intentResult.params.password, { amount, asset: intentResult.params.asset, to }, chain);
         }
 
         // Step 1: Store pending session and ask for password
         pendingSessions.set(normPhone, {
           action: 'send',
           sendParams: { amount, asset: intentResult.params.asset, to },
+          chain,
           createdAt: Date.now(),
         });
         return {
-          reply: `<< Send ${amount} ALGO to ${to}\n\n~~ Reply with your password to confirm:`,
+          reply: `<< Send ${amount} ${assetLabel} to ${to}\n\n~~ Reply with your password to confirm:`,
           containedPassword: false,
         };
       }
@@ -228,24 +248,28 @@ async function processIncomingSms(from: string, message: string): Promise<SmsPro
       case 'onboard': {
         // If user included password in the message, execute immediately
         if (intentResult.params.password) {
-          return await executeOnboard(from, intentResult.params.password);
+          return await executeOnboard(from, intentResult.params.password, chain);
         }
 
         // Step 1: Store pending session and ask for password
         pendingSessions.set(normPhone, {
           action: 'onboard',
+          chain,
           createdAt: Date.now(),
         });
         return {
-          reply: 'Let\'s create your wallet!\n\n~~ Choose a password and reply with it.\n!!! Remember it — it cannot be recovered!',
+          reply: `Let's create your ${assetLabel} wallet!\n\n~~ Choose a password and reply with it.\n!!! Remember it — it cannot be recovered!`,
           containedPassword: false,
         };
       }
 
       case 'fund': {
-        const fundResult = await fundUser(from);
+        const fundResult = isSolana
+          ? await fundUserSolana(from)
+          : await fundUser(from);
         if (fundResult.success) {
-          return { reply: `# Funded 1 ALGO to your wallet!\nTx ID: ${fundResult.txId}\nConfirmed in round: ${fundResult.confirmedRound}\n# Explorer: ${fundResult.explorerUrl}`, containedPassword: false };
+          const fundAmt = isSolana ? '0.1 SOL' : '1 ALGO';
+          return { reply: `# Funded ${fundAmt} to your wallet!\n# ${fundResult.explorerUrl}`, containedPassword: false };
         }
         return { reply: `!!! Fund failed: ${fundResult.error ?? 'Unknown error'}`, containedPassword: false };
       }
@@ -253,12 +277,13 @@ async function processIncomingSms(from: string, message: string): Promise<SmsPro
       case 'get_pvt_key': {
         // If user included password in the message, execute immediately
         if (intentResult.params.password) {
-          return await executeGetPvtKey(from, intentResult.params.password);
+          return await executeGetPvtKey(from, intentResult.params.password, chain);
         }
 
         // Step 1: Ask for password
         pendingSessions.set(normPhone, {
           action: 'get_pvt_key',
+          chain,
           createdAt: Date.now(),
         });
         return {
@@ -268,7 +293,7 @@ async function processIncomingSms(from: string, message: string): Promise<SmsPro
       }
 
       default:
-        return { reply: '?? Could not understand your request. Try:\n• "balance" — check your ALGO balance\n• "address" — get your wallet address\n• "create wallet" — create a new wallet\n• "send [amount] ALGO to [address/phone]" — send ALGO\n• "fund me" — get 1 testnet ALGO from admin wallet\n• "get pvt key" — export your private key\n• "get txn" — last 5 transactions', containedPassword: false };
+        return { reply: '?? Could not understand your request. Try:\n• "balance" — check balance\n• "SOL balance" — check Solana balance\n• "address" / "SOL address" — get wallet address\n• "create wallet" / "create wallet on solana" — create a new wallet\n• "send [amount] ALGO/SOL to [address/phone]" — send crypto\n• "fund me" — get testnet tokens\n• "get pvt key" — export your private key\n• "get txn" — last 5 transactions', containedPassword: false };
     }
   } catch (err) {
     console.error('Intent processing error:', err);
@@ -278,16 +303,20 @@ async function processIncomingSms(from: string, message: string): Promise<SmsPro
 
 // ─── Action executors (step 2) ──────────────────────────────────────────────
 
-async function executeOnboard(from: string, password: string): Promise<SmsProcessResult> {
-  const onboardResult = await onboardUser(from, password);
+async function executeOnboard(from: string, password: string, chain: ChainType = 'algorand'): Promise<SmsProcessResult> {
+  const isSolana = chain === 'solana';
+  const assetLabel = isSolana ? 'SOL' : 'ALGO';
+  const onboardResult = isSolana
+    ? await onboardUserSolana(from, password)
+    : await onboardUser(from, password);
   if (onboardResult.alreadyOnboarded) {
-    return { reply: `# You are already onboarded!\nAddress: ${onboardResult.address ?? 'N/A'}`, containedPassword: true };
+    return { reply: `# You are already onboarded on ${assetLabel}!\nAddress: ${onboardResult.address ?? 'N/A'}`, containedPassword: true };
   }
   if (onboardResult.error) {
     return { reply: `!!! Onboard failed: ${onboardResult.error}`, containedPassword: true };
   }
   return {
-    reply: `Welcome! Your wallet has been created.\nAddress: ${onboardResult.address ?? 'N/A'}`,
+    reply: `Welcome! Your ${assetLabel} wallet has been created.\nAddress: ${onboardResult.address ?? 'N/A'}`,
     containedPassword: true,
   };
 }
@@ -295,35 +324,56 @@ async function executeOnboard(from: string, password: string): Promise<SmsProces
 async function executeSend(
   from: string,
   password: string,
-  params: { amount: string; asset?: string; to: string }
+  params: { amount: string; asset?: string; to: string },
+  chain: ChainType = 'algorand'
 ): Promise<SmsProcessResult> {
-  const sendResult = await sendAlgo(from, password, {
-    amount: params.amount,
-    asset: params.asset,
-    to: params.to,
-  });
+  const isSolana = chain === 'solana';
+  const assetLabel = isSolana ? 'SOL' : 'ALGO';
+  const sendResult = isSolana
+    ? await sendSol(from, password, {
+        amount: params.amount,
+        asset: params.asset,
+        to: params.to,
+      })
+    : await sendAlgo(from, password, {
+        amount: params.amount,
+        asset: params.asset,
+        to: params.to,
+      });
   if (sendResult.success) {
+    const explorerLine = 'explorerUrl' in sendResult && sendResult.explorerUrl
+      ? `\n# ${sendResult.explorerUrl}`
+      : '';
     return {
-      reply: `<< Sent ${params.amount} ALGO to ${params.to}\nTx ID: ${sendResult.txId}\nConfirmed in round: ${sendResult.confirmedRound}`,
+      reply: `<< Sent ${params.amount} ${assetLabel} to ${params.to}${explorerLine}`,
       containedPassword: true,
     };
   }
   return { reply: `!!! Send failed: ${sendResult.error ?? 'Unknown error'}`, containedPassword: true };
 }
 
-async function executeGetPvtKey(from: string, password: string): Promise<SmsProcessResult> {
-  const { findOnboardedUser } = await import('./onchain');
+async function executeGetPvtKey(from: string, password: string, chain: ChainType = 'algorand'): Promise<SmsProcessResult> {
+  const isSolana = chain === 'solana';
   const { decryptMnemonic } = await import('./crypto/mnemonic');
 
-  const user = await findOnboardedUser(from);
+  let user;
+  if (isSolana) {
+    const { findOnboardedUserSolana } = await import('./onchain-solana');
+    user = await findOnboardedUserSolana(from);
+  } else {
+    const { findOnboardedUser } = await import('./onchain');
+    user = await findOnboardedUser(from);
+  }
+
   if (!user?.encrypted_mnemonic || !user?.address) {
     return { reply: '!!! Account not found or not onboarded.', containedPassword: true };
   }
 
   try {
-    const mnemonic = decryptMnemonic(user.encrypted_mnemonic, password);
+    const secret = decryptMnemonic(user.encrypted_mnemonic, password);
+    const label = isSolana ? 'Your Solana secret key (base58)' : 'Your 25-word recovery phrase';
     return {
-      reply: `# Your 25-word recovery phrase:\n\n${mnemonic}\n\n!!!! NEVER share this with anyone! Delete this message immediately after saving it securely.`,
+      reply: `# ${label}:\n\n${secret}\n\n!!!! NEVER share this with anyone! Delete this message immediately after saving it securely.`,
       containedPassword: true,
     };
   } catch {

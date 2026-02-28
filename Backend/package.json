@@ -11,10 +11,13 @@
   },
   "dependencies": {
     "@algorandfoundation/algokit-utils": "^9.2.0",
+    "@coral-xyz/anchor": "^0.32.1",
     "@google/genai": "^1.42.0",
     "@noble/curves": "^1.8.0",
     "@noble/hashes": "^1.7.0",
+    "@solana/web3.js": "^1.98.0",
     "algosdk": "^3.5.2",
+    "bs58": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "ethers": "^6.13.0",
